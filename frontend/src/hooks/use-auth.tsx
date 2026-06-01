@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { api, setToken, clearToken, getToken } from "@/lib/api-client";
 
 export type AppRole = "admin" | "sales_manager" | "store_keeper";
@@ -91,6 +91,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function LoginPage() {
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loadingForm, setLoadingForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setLoadingForm(true);
+
+    try {
+      await signIn(email, password);
+    } catch {
+      setError("Invalid email or password.");
+    } finally {
+      setLoadingForm(false);
+    }
+  };
+
+  return (
+    <div className="login-page">
+      <h1>Login</h1>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+
+        {error ? <div className="error-message">{error}</div> : null}
+
+        <button type="submit" disabled={loadingForm}>
+          {loadingForm ? "Signing in..." : "Sign in"}
+        </button>
+      </form>
+    </div>
+  );
 }
 
 export function useAuth() {
